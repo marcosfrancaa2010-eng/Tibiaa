@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tibia Finder PWA</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1A1A1A">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        tibia: {
+                            dark: '#1A1A1A',
+                            gold: '#FFD700',
+                            brown: '#8B4513',
+                            panel: '#2A2A2A'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1A1A1A;
+            color: #FFFFFF;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #2A2A2A 25%, #3A3A3A 50%, #2A2A2A 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        /* Oculta a barra de rolagem horizontal */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-tibia-dark min-h-screen flex flex-col pb-20">
+
+    <!-- Header -->
+    <header class="bg-tibia-panel p-4 shadow-md sticky top-0 z-10 border-b border-tibia-brown">
+        <h1 class="text-2xl font-bold text-tibia-gold text-center"><i class="fa-solid fa-dragon mr-2"></i>Tibia Finder</h1>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow p-4 max-w-md mx-auto w-full">
+        
+        <!-- Search Bar -->
+        <div class="relative mb-6">
+            <input type="text" id="searchInput" placeholder="Nome do personagem..." 
+                class="w-full bg-tibia-panel border border-tibia-brown rounded-full py-3 px-5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-tibia-gold">
+            <button id="searchBtn" class="absolute right-2 top-2 bg-tibia-brown hover:bg-yellow-700 text-white rounded-full p-2 w-10 h-10 flex items-center justify-center transition">
+                <i class="fa-solid fa-search"></i>
+            </button>
+        </div>
+
+        <!-- Loading Skeleton -->
+        <div id="loadingSkeleton" class="hidden space-y-4">
+            <div class="h-24 skeleton rounded-lg"></div>
+            <div class="h-12 skeleton rounded-lg"></div>
+            <div class="h-32 skeleton rounded-lg"></div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="hidden bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-lg text-center mb-4">
+            Personagem não encontrado ou erro na API.
+        </div>
+
+        <!-- Character Result -->
+        <div id="characterResult" class="hidden flex-col gap-4">
+            <!-- Basic Info -->
+            <div class="bg-tibia-panel p-5 rounded-lg border border-gray-700 relative">
+                <button id="favoriteBtn" class="absolute top-4 right-4 text-gray-400 hover:text-tibia-gold text-xl transition">
+                    <i class="fa-regular fa-star" id="favoriteIcon"></i>
+                </button>
+                <button id="shareBtn" class="absolute top-4 right-12 text-gray-400 hover:text-blue-400 text-xl transition">
+                    <i class="fa-solid fa-share-nodes"></i>
+                </button>
+                
+                <h2 id="charName" class="text-xl font-bold text-tibia-gold mb-1 pr-16">Name</h2>
+                <div class="flex items-center gap-2 mb-3">
+                    <span id="charStatus" class="w-3 h-3 rounded-full bg-gray-500"></span>
+                    <span id="charStatusText" class="text-sm text-gray-300">Offline</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div class="text-gray-400">Level:</div>
+                    <div id="charLevel" class="font-semibold text-white">0</div>
+                    
+                    <div class="text-gray-400">Vocação:</div>
+                    <div id="charVocation" class="font-semibold text-white">-</div>
+                    
+                    <div class="text-gray-400">Mundo:</div>
+                    <div id="charWorld" class="font-semibold text-white">-</div>
+                    
+                    <div class="text-gray-400">Guilda:</div>
+                    <div id="charGuild" class="font-semibold text-white">-</div>
+                </div>
+            </div>
+
+            <!-- Smart Tip (AI Integration Placeholder) -->
+            <div class="bg-gradient-to-r from-blue-900/40 to-purple-900/40 p-4 rounded-lg border border-blue-800/50">
+                <h3 class="text-blue-300 font-bold mb-2 flex items-center"><i class="fa-solid fa-lightbulb mr-2 text-yellow-400"></i> Dica de Hunt (Smart Tip)</h3>
+                <p id="smartTipText" class="text-sm text-gray-200 italic">Analisando personagem...</p>
+            </div>
+
+            <!-- Recent Deaths -->
+            <div class="bg-tibia-panel p-4 rounded-lg border border-gray-700">
+                <h3 class="text-tibia-gold font-bold mb-3 border-b border-gray-700 pb-2">Últimas Mortes</h3>
+                <ul id="charDeaths" class="space-y-3 text-sm">
+                    <!-- Deaths will be injected here -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- Favorites List -->
+        <div id="favoritesSection" class="mt-8">
+            <h3 class="text-lg font-bold text-gray-300 mb-3"><i class="fa-solid fa-bookmark mr-2"></i>Favoritos</h3>
+            <div id="favoritesList" class="grid grid-cols-1 gap-2">
+                <!-- Favorites will be injected here -->
+            </div>
+        </div>
+
+        <!-- Monetization / Ads Placeholder -->
+        <!-- <div id="ad-banner-placeholder" class="mt-8 w-full h-16 bg-gray-800 flex items-center justify-center text-gray-500 text-xs border border-gray-700 rounded">
+            Ad Banner Placeholder
+        </div> -->
+        
+        <div class="mt-6 text-center">
+            <a href="#" class="inline-block bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-bold py-2 px-6 rounded-full shadow-lg hover:scale-105 transition transform">
+                <i class="fa-solid fa-coins mr-1"></i> Comprar Tibia Coins (Afiliado)
+            </a>
+        </div>
+
+    </main>
+
+    <!-- Bottom Navigation (Mobile Native Feel) -->
+    <nav class="fixed bottom-0 w-full bg-tibia-panel border-t border-tibia-brown flex justify-around items-center p-3 pb-safe">
+        <button class="text-tibia-gold flex flex-col items-center" onclick="window.scrollTo(0,0)">
+            <i class="fa-solid fa-search text-xl mb-1"></i>
+            <span class="text-xs">Buscar</span>
+        </button>
+        <button class="text-gray-400 hover:text-tibia-gold flex flex-col items-center transition" onclick="document.getElementById('searchInput').focus()">
+            <i class="fa-solid fa-star text-xl mb-1"></i>
+            <span class="text-xs">Favoritos</span>
+        </button>
+    </nav>
+
+    <script src="/app.js"></script>
+</body>
+</html>
